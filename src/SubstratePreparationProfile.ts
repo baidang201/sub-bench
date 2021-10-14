@@ -1,8 +1,7 @@
 import {PreparationProfile} from "tank.bench-common";
 import {ApiPromise, WsProvider} from "@polkadot/api";
 import {Keyring} from "@polkadot/keyring";
-import {Index} from "@polkadot/types/interfaces";
-//import data from ".//initPairs.json";
+import { BN } from "bn.js";
 
 let data = [
   {
@@ -4011,6 +4010,18 @@ interface MyObj {
   mnemonic: string;
 }
 
+const DPR = new BN('1000000000000000000'); // base = 1e18;
+
+// convert number in the smallest unit to DPR unit
+function toDPR(amt: number): any {
+    return new BN(amt).div(DPR);
+}
+
+// convert number in DPR unit to number in the smallest unit of the currency.
+function fromDPR(amt: number): any {
+    return new BN(amt).mul(DPR);
+}
+
 export default class SubstratePreparationProfile extends PreparationProfile {
 
     static readonly fileName = __filename;
@@ -4030,7 +4041,150 @@ export default class SubstratePreparationProfile extends PreparationProfile {
 
         let provider = new WsProvider(this.moduleConfig.wsUrl);
 
-        let api = await ApiPromise.create({provider});
+        let api = await ApiPromise.create({
+          provider: provider, 
+          types: {
+          "Address": "MultiAddress",
+          "LookupSource": "MultiAddress",
+          "AccountInfo": "AccountInfoWithDualRefCount",
+          "Balance": "u128",
+          "Timestamp": "Moment",
+          "BlockNumber": "u32",
+          "IpV4": "Vec<u8>",
+          "CountryRegion": "Vec<u8>",
+          "DurationEras": "u8",
+          "Node": {
+            "account_id": "AccountId",
+            "ipv4": "IpV4",
+            "country": "CountryRegion",
+            "expire": "BlockNumber"
+          },
+          "ChannelOf": {
+            "sender": "AccountId",
+            "receiver": "AccountId",
+            "balance": "Balance",
+            "nonce": "u64",
+            "opened": "BlockNumber",
+            "expiration": "BlockNumber"
+          },
+          "MemberId": "u64",
+          "ProposalId": "u64",
+          "Limits": {
+            "max_tx_value": "u128",
+            "day_max_limit": "u128",
+            "day_max_limit_for_one_address": "u128",
+            "max_pending_tx_limit": "u128",
+            "min_tx_value": "u128"
+          },
+          "Status": {
+            "_enum": [
+              "Revoked",
+              "Pending",
+              "PauseTheBridge",
+              "ResumeTheBridge",
+              "UpdateValidatorSet",
+              "UpdateLimits",
+              "Deposit",
+              "Withdraw",
+              "Approved",
+              "Canceled",
+              "Confirmed"
+            ]
+          },
+          "Kind": {
+            "_enum": ["Transfer", "Limits", "Validator", "Bridge"]
+          },
+          "TransferMessage": {
+            "message_id": "H256",
+            "eth_address": "H160",
+            "substrate_address": "AccountId",
+            "amount": "TokenBalance",
+            "status": "Status",
+            "action": "Status"
+          },
+          "LimitMessage": {
+            "id": "H256",
+            "limits": "Limits",
+            "status": "Status"
+          },
+          "BridgeMessage": {
+            "message_id": "H256",
+            "account": "AccountId",
+            "status": "Status",
+            "action": "Status"
+          },
+          "ValidatorMessage": {
+            "message_id": "H256",
+            "quorum": "u64",
+            "accounts": "Vec<AccountId>",
+            "status": "Status",
+            "action": "Status"
+          },
+          "BridgeTransfer": {
+            "transfer_id": "ProposalId",
+            "message_id": "H256",
+            "open": "bool",
+            "votes": "MemberId",
+            "kind": "Kind"
+          },
+          "CreditLevel": {
+            "_enum": [
+              "Zero",
+              "One",
+              "Two",
+              "Three",
+              "Four",
+              "Five",
+              "Six",
+              "Seven",
+              "Eight"
+            ]
+          },
+          "CampaignId": "u16",
+          "CreditSetting": {
+            "campaign_id": "CampaignId",
+            "credit_level": "CreditLevel",
+            "staking_balance": "Balance",
+            "base_apy": "Percent",
+            "bonus_apy": "Percent",
+            "max_rank_with_bonus": "u32",
+            "tax_rate": "Percent",
+            "max_referees_with_rewards": "u8",
+            "reward_per_referee": "Balance"
+          },
+          "CreditData": {
+            "campaign_id": "CampaignId",
+            "credit": "u64",
+            "initial_credit_level": "CreditLevel",
+            "rank_in_initial_credit_level": "u32",
+            "number_of_referees": "u8",
+            "current_credit_level": "CreditLevel",
+            "reward_eras": "EraIndex"
+          },
+          "DelegatorData": {
+            "delegator": "AccountId",
+            "delegated_validators": "Vec<AccountId>",
+            "unrewarded_since": "Option<EraIndex>",
+            "delegating": "bool"
+          },
+          "EraIndex": "u32",
+          "ValidatorData": {
+            "delegators": "Vec<AccountId>",
+            "elected_era": "EraIndex"
+          },
+          "RewardData": {
+            "total_referee_reward": "Balance",
+            "received_referee_reward": "Balance",
+            "referee_reward": "Balance",
+            "received_pocr_reward": "Balance",
+            "poc_reward": "Balance"
+          },
+          "ValidatorPrefs": {
+            "commission": "Perbill",
+            "blocked": "bool"
+          }
+        }
+      });
 
         let keyring = new Keyring({type: 'sr25519'});
 
@@ -4084,7 +4238,7 @@ export default class SubstratePreparationProfile extends PreparationProfile {
             let keypair = keyring.addFromUri(this.stringSeed(seed));
 
             // should be greater than existential deposit.
-            let transfer = api.tx.balances.transfer(keypair.address, '100000000000000000');
+            let transfer = api.tx.balances.transfer(keypair.address, '1000000000000000000000');
 
             let receiverSeed = this.stringSeed(seed);
             this.logger.log(
@@ -4092,6 +4246,8 @@ export default class SubstratePreparationProfile extends PreparationProfile {
             );
             await transfer.signAndSend(aliceKeyPair, { nonce: aliceNonce });
             aliceNonce ++;
+
+            await api.tx.micropayment.openChannel(keypair.address, fromDPR(100), 1000);
 
             if (seed % 200 == 199) {
                 // give node some time to breath
