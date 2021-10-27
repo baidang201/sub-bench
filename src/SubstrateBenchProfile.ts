@@ -4241,8 +4241,8 @@ export default class SubstrateBenchProfile extends BenchProfile {
             let receiverKeyringPair = this.keyPairs.get(receiverSeed)!;
 
 
-            let nonce_micropayment = await this.api.query.micropayment.nonce([senderKeyPair.address, alice.address]) as u64;
-            let sidOption = await this.api.query.micropayment.sessionId([senderKeyPair.address, alice.address]) as Option<u32>;
+            let nonce_micropayment = await this.api.query.micropayment.nonce([alice.address, senderKeyPair.address ]) as u64;
+            let sidOption = await this.api.query.micropayment.sessionId([alice.address, senderKeyPair.address ]) as Option<u32>;
             let sid = sidOption.unwrapOr(0);
 
             let nonce_new = new BN(nonce_micropayment.toString());
@@ -4253,11 +4253,12 @@ export default class SubstrateBenchProfile extends BenchProfile {
             let nonce_micropayment_array = nonce_new.toArray('be', 8);
             let session_id_array = sessionId.toArray('be', 4);
             let amount_array = amt.toArray('le', 16); // amount is le encoded
-            arr.push(...alice.address, ...nonce_micropayment_array, ...session_id_array, ...amount_array);
+            arr.push(...senderKeyPair.publicKey, ...nonce_micropayment_array, ...session_id_array, ...amount_array);
             let res = arr;
 
             let msg = blake2AsU8a(res.toString());
-            let sig = senderKeyPair.sign(msg);
+            let sig = alice.sign(msg);
+            //console.log(senderKeyPair.address.toString(), "senderKeyPair.publicKey", senderKeyPair.publicKey.toString(), "###res:", res, " ###msg:", msg, " ###sig", sig);
 
             let transfer = this.api.tx.micropayment.claimPayment(
               alice.address, 
