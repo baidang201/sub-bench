@@ -4256,8 +4256,9 @@ export default class SubstrateBenchProfile extends BenchProfile {
             arr.push(...senderKeyPair.publicKey, ...nonce_micropayment_array, ...session_id_array, ...amount_array);
             let res = arr;
 
-            let msg = blake2AsU8a(res.toString());
+            let msg = blake2AsU8a(new Uint8Array(res));
             let sig = alice.sign(msg);
+            
             //console.log(senderKeyPair.address.toString(), "senderKeyPair.publicKey", senderKeyPair.publicKey.toString(), "###res:", res, " ###msg:", msg, " ###sig", sig);
 
             let transfer = this.api.tx.micropayment.claimPayment(
