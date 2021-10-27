@@ -3,6 +3,9 @@ import {Keyring} from "@polkadot/keyring";
 import {ApiPromise, WsProvider} from "@polkadot/api";
 import {KeyringPair} from "@polkadot/keyring/types";
 import { BN } from "bn.js";
+import { blake2AsU8a } from "@polkadot/util-crypto";
+import type { Bytes, u32, u64, Option } from '@polkadot/types';
+
 
 let data = [
   {
@@ -4225,6 +4228,7 @@ export default class SubstrateBenchProfile extends BenchProfile {
             this.keyPairs.set(seed, keypair);
         }
 
+        const alice = this.keyring.addFromUri('//Alice');
         const bob = this.keyring.addFromUri('//Bob');
 
         this.logger.log(`Pregenerating ${PREGENERATE_TRANSACTIONS} transactions for thread ${threadId}`);
@@ -4236,7 +4240,33 @@ export default class SubstrateBenchProfile extends BenchProfile {
             let receiverSeed = this.getRandomReceiverSeed(senderSeed);
             let receiverKeyringPair = this.keyPairs.get(receiverSeed)!;
 
-            let transfer = this.api.tx.micropayment.addBalance(bob.address, fromDPR(TOKENS_TO_SEND));
+
+            let nonce_micropayment = await this.api.query.micropayment.nonce([senderKeyPair.address, alice.address]) as u64;
+            let sidOption = await this.api.query.micropayment.sessionId([senderKeyPair.address, alice.address]) as Option<u32>;
+            let sid = sidOption.unwrapOr(0);
+
+            let nonce_new = new BN(nonce_micropayment.toString());
+            let sessionId = new BN(sid.toString()).add(new BN(1));
+            let amt = new BN(10).mul(DPR);
+
+            let arr = [];
+            let nonce_micropayment_array = nonce_new.toArray('be', 8);
+            let session_id_array = sessionId.toArray('be', 4);
+            let amount_array = amt.toArray('le', 16); // amount is le encoded
+            arr.push(...alice.address, ...nonce_micropayment_array, ...session_id_array, ...amount_array);
+            let res = arr;
+
+            let msg = blake2AsU8a(res.toString());
+            let sig = senderKeyPair.sign(msg);
+
+            let transfer = this.api.tx.micropayment.claimPayment(
+              alice.address, 
+              sessionId, 
+              amt, 
+              '0x' + Array.from(sig, function (byte) {
+                return ('0' + (byte & 0xff).toString(16)).slice(-2);
+              }).join('')
+            );
             let signedTransaction = transfer.sign(senderKeyPair, {nonce});
 
             this.preparedTransactions.push({ from: senderSeed, to: receiverSeed, signed: signedTransaction, nonce });

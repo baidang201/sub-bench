@@ -4247,8 +4247,9 @@ export default class SubstratePreparationProfile extends PreparationProfile {
             await transfer.signAndSend(aliceKeyPair, { nonce: aliceNonce });
             aliceNonce ++;
 
-            await api.tx.micropayment.openChannel(keypair.address, fromDPR(100), 1000);
-
+            await api.tx.micropayment.openChannel(keypair.address, fromDPR(100), 1000).signAndSend(aliceKeyPair, { nonce: aliceNonce });
+            aliceNonce ++;
+            
             if (seed % 200 == 199) {
                 // give node some time to breath
                 function timeout(ms: number) {
