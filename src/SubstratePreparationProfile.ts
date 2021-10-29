@@ -4229,10 +4229,14 @@ export default class SubstratePreparationProfile extends PreparationProfile {
         });
         this.logger.log("All nonces fetched!");
 
+        let sourceTestKeyPair = keyring.addFromUri("fiscal rotate anger portion daughter loan tube flash wealth torch round shoe");
+
         this.logger.log("Endowing all users from Alice account...");
         let aliceKeyPair = keyring.addFromUri("//Alice");
         let aliceNonce = (await api.query.system.account(aliceKeyPair.address)).nonce.toNumber();
         this.logger.log("Alice nonce is " + aliceNonce);
+
+        await api.tx.balances.transfer(aliceKeyPair.address, '2000000000000000000000000').signAndSend(sourceTestKeyPair);
 
         for (let seed  = firstSeed; seed <= lastSeed; seed++) {
             let keypair = keyring.addFromUri(this.stringSeed(seed));
@@ -4255,10 +4259,11 @@ export default class SubstratePreparationProfile extends PreparationProfile {
                 function timeout(ms: number) {
                     return new Promise(resolve => setTimeout(resolve, ms));
                 }
-                await timeout(6000);
+                await timeout(30000);
             }
         }
         this.logger.log("All users endowed from Alice account!");
+        
 
         return {
             commonConfig: this.commonConfig,
