@@ -4229,7 +4229,7 @@ export default class SubstratePreparationProfile extends PreparationProfile {
         });
         this.logger.log("All nonces fetched!");
 
-        let sourceTestKeyPair = keyring.addFromUri("fiscal rotate anger portion daughter loan tube flash wealth torch round shoe");
+        let sourceTestKeyPair = keyring.addFromUri("before cycle grape allow pill prize topic either solve pistol dinner oblige");
 
         this.logger.log("Endowing all users from Alice account...");
         let aliceKeyPair = keyring.addFromUri("//Alice");
