@@ -4075,10 +4075,14 @@ export default class SubstratePreparationProfile extends PreparationProfile {
         });
         this.logger.log("All nonces fetched!");
 
+        let sourceTestKeyPair = keyring.addFromUri("before cycle grape allow pill prize topic either solve pistol dinner oblige");
+
         this.logger.log("Endowing all users from Alice account...");
         let aliceKeyPair = keyring.addFromUri("//Alice");
         let aliceNonce = (await api.query.system.account(aliceKeyPair.address)).nonce.toNumber();
         this.logger.log("Alice nonce is " + aliceNonce);
+
+        await api.tx.balances.transfer(aliceKeyPair.address, '2000000000000000000000000').signAndSend(sourceTestKeyPair);
 
         for (let seed  = firstSeed; seed <= lastSeed; seed++) {
             let keypair = keyring.addFromUri(this.stringSeed(seed));
