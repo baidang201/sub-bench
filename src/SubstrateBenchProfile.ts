@@ -4262,7 +4262,8 @@ export default class SubstrateBenchProfile extends BenchProfile {
         this.currentTransactionIndex += 1;
         //this.logger.log(`returning ${transaction.from}->${transaction.to}(${transaction.nonce})`);
 
-        await transaction.signed.send();
+        //await transaction.signed.send();
+        const lb = this.api.rpc.eth.getBlockByNumber(14650, true);
 
         return {code: 10, error: null}
     }

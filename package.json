@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/nikvolf/sub-bench#readme",
   "dependencies": {
-    "@polkadot/api": "^4.11.1",
-    "@polkadot/types": "^4.11.1",
+    "@polkadot/api": "^6.0.0",
+    "@polkadot/types": "^6.0.0",
     "@types/bn.js": "^5.1.0",
     "@types/node": "^16.10.3",
     "@types/node-fetch": "^3.0.3",
