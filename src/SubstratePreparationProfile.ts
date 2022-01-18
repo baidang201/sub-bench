@@ -4244,10 +4244,10 @@ export default class SubstratePreparationProfile extends PreparationProfile {
             this.logger.log(
                 `Alice -> ${receiverSeed} (${keypair.address})`
             );
-            await transfer.signAndSend(aliceKeyPair, { nonce: aliceNonce });
+            //await transfer.signAndSend(aliceKeyPair, { nonce: aliceNonce });
             aliceNonce ++;
 
-            await api.tx.micropayment.openChannel(keypair.address, fromDPR(100), 1000);
+            //await api.tx.micropayment.openChannel(keypair.address, fromDPR(100), 1000);
 
             if (seed % 200 == 199) {
                 // give node some time to breath
