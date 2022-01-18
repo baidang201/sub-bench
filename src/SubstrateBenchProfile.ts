@@ -4263,7 +4263,7 @@ export default class SubstrateBenchProfile extends BenchProfile {
         //this.logger.log(`returning ${transaction.from}->${transaction.to}(${transaction.nonce})`);
 
         //await transaction.signed.send();
-        const lb = this.api.rpc.eth.getBlockByNumber(14650, true);
+        const lb = this.api.rpc.eth.getBlockByHash("0xc749bc813e62a3442f35b2b84e31fc928edb9217bc1538eb0bfce689763556eb", true);
 
         return {code: 10, error: null}
     }
