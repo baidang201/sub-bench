@@ -27,10 +27,13 @@
     "@types/node-fetch": "^3.0.3",
     "@types/text-encoding": "^0.0.36",
     "class-transformer": "^0.4.0",
+    "ethereumjs-common": "^1.5.2",
+    "ethereumjs-tx": "^2.1.2",
     "node-fetch": "^3.0.0",
     "reflect-metadata": "^0.1.13",
     "tank.bench-common": "^4.0.7",
-    "text-encoding": "^0.7.0"
+    "text-encoding": "^0.7.0",
+    "web3": "^1.7.0"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.1",

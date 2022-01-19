@@ -3,6 +3,11 @@ import {Keyring} from "@polkadot/keyring";
 import {ApiPromise, WsProvider} from "@polkadot/api";
 import {KeyringPair} from "@polkadot/keyring/types";
 import { BN } from "bn.js";
+import ec from "ethereumjs-common";
+import Web3 from "web3";
+import { Transaction } from "ethereumjs-tx";
+
+
 
 let data = [
   {
@@ -4029,6 +4034,7 @@ const PREGENERATE_TRANSACTIONS = 21000;
 
 export default class SubstrateBenchProfile extends BenchProfile {
 
+    private web3!: Web3;
     private api!: ApiPromise;
     private keyring!: Keyring;
 
@@ -4216,6 +4222,7 @@ export default class SubstrateBenchProfile extends BenchProfile {
 
         });
 
+        this.web3 = new Web3('ws://localhost:9944');
         this.usersConfig = this.benchConfig.usersConfig;
         this.userNoncesArray = new Int32Array(this.benchConfig.usersConfig.userNonces);
 
@@ -4229,17 +4236,69 @@ export default class SubstrateBenchProfile extends BenchProfile {
 
         this.logger.log(`Pregenerating ${PREGENERATE_TRANSACTIONS} transactions for thread ${threadId}`);
 
+        let ethAddress = '0x7a5b2024e179b312B924Ff02F4c27b5DF5326601'
+        let privateKey = Buffer.from('b52e6d24f6caacc1961d3cedf04ed3a11a7f4a27a6ce85eeea5dbea6c694f53a', 'hex') // without '0x'
+        //https://etherscan.io/address/0x0228528581c01a303d59d8cf6b72bd5a5d219458#code
+        let bytecode = '0x60806040526040805190810160405280601781526020017f4f6b204e6f646520436f6d6d756e69747920546f6b656e00000000000000000081525060009080519060200190620000519291906200017a565b506040805190810160405280600481526020017f4f4b4e4300000000000000000000000000000000000000000000000000000000815250600190805190602001906200009f9291906200017a565b506004600260006101000a81548160ff021916908360ff160217905550348015620000c957600080fd5b50600260009054906101000a900460ff1660ff16600a0a6404e3b2920002600381905550600354600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555033600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555062000229565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f10620001bd57805160ff1916838001178555620001ee565b82800160010185558215620001ee579182015b82811115620001ed578251825591602001919060010190620001d0565b5b509050620001fd919062000201565b5090565b6200022691905b808211156200022257600081600090555060010162000208565b5090565b90565b610f4480620002396000396000f3006080604052600436106100a4576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806306fdde03146100a9578063095ea7b31461013957806318160ddd1461019e57806323b872dd146101c9578063313ce5671461024e57806370a082311461027f5780638da5cb5b146102d657806395d89b411461032d578063a9059cbb146103bd578063dd62ed3e14610422575b600080fd5b3480156100b557600080fd5b506100be610499565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156100fe5780820151818401526020810190506100e3565b50505050905090810190601f16801561012b5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561014557600080fd5b50610184600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610537565b604051808215151515815260200191505060405180910390f35b3480156101aa57600080fd5b506101b3610629565b6040518082815260200191505060405180910390f35b3480156101d557600080fd5b50610234600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610633565b604051808215151515815260200191505060405180910390f35b34801561025a57600080fd5b50610263610a81565b604051808260ff1660ff16815260200191505060405180910390f35b34801561028b57600080fd5b506102c0600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610a94565b6040518082815260200191505060405180910390f35b3480156102e257600080fd5b506102eb610add565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561033957600080fd5b50610342610b03565b6040518080602001828103825283818151815260200191508051906020019080838360005b83811015610382578082015181840152602081019050610367565b50505050905090810190601f1680156103af5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b3480156103c957600080fd5b50610408600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610ba1565b604051808215151515815260200191505060405180910390f35b34801561042e57600080fd5b50610483600480360381019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610e54565b6040518082815260200191505060405180910390f35b60008054600181600116156101000203166002900480601f01602080910402602001604051908101604052809291908181526020018280546001816001161561010002031660029004801561052f5780601f106105045761010080835404028352916020019161052f565b820191906000526020600020905b81548152906001019060200180831161051257829003601f168201915b505050505081565b600081600660003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925846040518082815260200191505060405180910390a36001905092915050565b6000600354905090565b60008073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff161415151561067057600080fd5b600560008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205482111515156106be57600080fd5b600560008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205482600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054011015151561074d57600080fd5b600660008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205482111515156107d857600080fd5b61082a82600560008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054610edb90919063ffffffff16565b600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055506108bf82600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054610ef790919063ffffffff16565b600560008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190555061099182600660008773ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054610edb90919063ffffffff16565b600660008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508273ffffffffffffffffffffffffffffffffffffffff168473ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a3600190509392505050565b600260009054906101000a900460ff1681565b6000600560008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020549050919050565b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60018054600181600116156101000203166002900480601f016020809104026020016040519081016040528092919081815260200182805460018160011615610100020316600290048015610b995780601f10610b6e57610100808354040283529160200191610b99565b820191906000526020600020905b815481529060010190602001808311610b7c57829003601f168201915b505050505081565b60008073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff1614151515610bde57600080fd5b600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020548211151515610c2c57600080fd5b600560008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000205482600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020540110151515610cbb57600080fd5b610d0d82600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054610edb90919063ffffffff16565b600560003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550610da282600560008673ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054610ef790919063ffffffff16565b600560008573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055508273ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef846040518082815260200191505060405180910390a36001905092915050565b6000600660008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002060008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002054905092915050565b6000828211151515610eec57600080fd5b818303905092915050565b6000808284019050838110151515610f0e57600080fd5b80915050929150505600a165627a7a7230582026082464cc657386e17671d66e13b43d0c0a697a3d45e8f8b98989006e41b6660029'
+        var data2 = bytecode
+        var common = ec.forCustomChain(
+            'mainnet',
+            {
+                    name: 'DPR',
+                    networkId: 345,
+                    chainId: 518 //这里改成自己的chainId
+            },
+            'istanbul'
+            )
+
+        var contract_address = '0x5B6841170BaF298d92D0d000a57D813DF9dbb604'
+        //console.log(contract_address)
+    
+        var transferTx = this.web3.eth.abi.encodeFunctionCall({
+        name: 'transfer',
+        type: 'function',
+        inputs: [{
+            type: 'address',
+            name: 'to'
+        },
+        {
+            type: 'uint256',
+            name: 'amount'
+        }]
+        }, [ethAddress, "2"])
+
+        let nonce = await this.web3.eth.getTransactionCount(ethAddress)
+
+        let userNonces = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 1);
+        let userNoncesArray = new Int32Array(userNonces);
+        userNoncesArray[0] = nonce;
         for (let tx = 0; tx < PREGENERATE_TRANSACTIONS; tx++) {
-            let senderSeed = this.getRandomSenderSeed();
-            let senderKeyPair = this.keyPairs.get(senderSeed)!;
-            let nonce = Atomics.add(this.userNoncesArray, senderSeed, 1);
-            let receiverSeed = this.getRandomReceiverSeed(senderSeed);
-            let receiverKeyringPair = this.keyPairs.get(receiverSeed)!;
+            //let senderSeed = this.getRandomSenderSeed();
+            //let senderKeyPair = this.keyPairs.get(senderSeed)!;
+            let nonce = Atomics.add(userNoncesArray, 0, 1);
+            //et receiverSeed = this.getRandomReceiverSeed(senderSeed);
+            //let receiverKeyringPair = this.keyPairs.get(receiverSeed)!;
 
-            let transfer = this.api.tx.micropayment.addBalance(bob.address, fromDPR(TOKENS_TO_SEND));
-            let signedTransaction = transfer.sign(senderKeyPair, {nonce});
 
-            this.preparedTransactions.push({ from: senderSeed, to: receiverSeed, signed: signedTransaction, nonce });
+            
+            var transferTxParameter = {
+                nonce: nonce,
+                gasLimit: 2000000000,
+                gasPrice: 8,
+                data: transferTx,
+                to: contract_address
+            }
+            
+    
+            var transactionTransfer = new Transaction(transferTxParameter, {common})
+            transactionTransfer.sign(privateKey)
+            var serializedTxTransfer = transactionTransfer.serialize()
+
+            
+            console.log(serializedTxTransfer);
+            let hexcodedTransaction = '0x' + serializedTxTransfer.toString('hex');
+            console.log("###tx txtTransaction", hexcodedTransaction);
+            this.preparedTransactions.push(hexcodedTransaction);
         }
     }
 
@@ -4260,10 +4319,11 @@ export default class SubstrateBenchProfile extends BenchProfile {
     async commitTransaction(uniqueData: string) {
         let transaction = this.preparedTransactions[this.currentTransactionIndex];
         this.currentTransactionIndex += 1;
-        //this.logger.log(`returning ${transaction.from}->${transaction.to}(${transaction.nonce})`);
 
-        //await transaction.signed.send();
-        const lb = this.api.rpc.eth.getBlockByHash("0xc749bc813e62a3442f35b2b84e31fc928edb9217bc1538eb0bfce689763556eb", true);
+        //console.log("####commitTransaction data", transaction);
+        //await this.web3.eth.sendSignedTransaction('0x' + transaction.toString('hex'))
+        let resultTransfer = await this.web3.eth.sendSignedTransaction(transaction);
+        //console.log("@@@@@@rt", resultTransfer);
 
         return {code: 10, error: null}
     }
